@@ -4,6 +4,8 @@ import { IONAuthManager } from './auth';
 import { config } from '../config/index';
 import logger from '../utils/logger';
 import { IONAPIError } from '../utils/errors';
+import { recordApiRequest, recordTokenRefresh } from '../utils/metrics';
+import { isIONAuthError, AuthErrors } from '../utils/auth-errors';
 
 export class IONApiClient {
   private readonly authManager: IONAuthManager;
@@ -64,9 +66,26 @@ export class IONApiClient {
     path: string,
     options: IONRequestOptions = {},
   ): Promise<IONApiResponse<T>> {
+    const startTime = Date.now();
+    const method = options.method || 'GET';
+    
     try {
       // Get access token
-      const accessToken = await this.authManager.getAccessToken();
+      let accessToken: string;
+      try {
+        accessToken = await this.authManager.getAccessToken();
+      } catch (authError) {
+        // Re-throw auth errors with additional context
+        if (isIONAuthError(authError)) {
+          logger.error('Authentication failed for API request', {
+            path,
+            method,
+            error: authError.toJSON(),
+          });
+          throw authError;
+        }
+        throw authError;
+      }
 
       // Build headers
       const headers = {
@@ -84,13 +103,17 @@ export class IONApiClient {
 
       // Make request
       const response = await this.axiosInstance.request<T>({
-        method: options.method || 'GET',
+        method,
         url: path,
         headers,
         params: options.queryParams,
         data: options.body,
         timeout: options.timeout,
       });
+
+      // Record metrics
+      const duration = (Date.now() - startTime) / 1000;
+      recordApiRequest(method, path, response.status, duration);
 
       return {
         data: response.data,
@@ -100,10 +123,16 @@ export class IONApiClient {
       };
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        // Record failed request metric
+        const duration = (Date.now() - startTime) / 1000;
+        recordApiRequest(method, path, error.response?.status || 0, duration);
+        
         // Handle 401 errors by clearing token and retrying once
         if (error.response?.status === 401 && !options.headers?.['X-Retry-Auth']) {
           logger.info('Received 401, clearing token and retrying');
           await this.authManager.clearToken();
+          
+          recordTokenRefresh('reactive', true);
           
           return this.request<T>(path, {
             ...options,

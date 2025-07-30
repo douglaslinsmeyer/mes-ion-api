@@ -1,13 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { config } from './config/index';
-import { AuthenticationError } from './utils/errors';
-import logger from './utils/logger';
-import { cache } from './cache/index';
+import { config } from '../config/index';
+import logger from '../utils/logger';
+import { cache } from '../cache/index';
+import { recordCacheOperation } from '../utils/metrics';
 
 export interface AuthenticatedRequest extends Request {
   apiKey?: string;
   clientId?: string;
+  permissions?: string[];
+}
+
+export class AuthenticationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
 }
 
 // In-memory store for API keys (in production, this would be in a database)
@@ -53,8 +61,11 @@ export const authMiddleware = async (
     if (cachedAuth) {
       req.apiKey = apiKey;
       req.clientId = cachedAuth.clientId;
+      recordCacheOperation('get', true);
       return next();
     }
+    
+    recordCacheOperation('get', false);
 
     // Validate API key
     const hashedKey = hashApiKey(apiKey);
@@ -78,11 +89,14 @@ export const authMiddleware = async (
     // Add auth info to request
     req.apiKey = apiKey;
     req.clientId = keyInfo.clientId;
+    req.permissions = keyInfo.permissions;
 
     logger.debug('API key authenticated', {
       clientId: keyInfo.clientId,
       name: keyInfo.name,
     });
+    
+    recordCacheOperation('set', true);
 
     next();
   } catch (error) {

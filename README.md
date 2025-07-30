@@ -267,6 +267,12 @@ Full API documentation is available at:
 
 See [API Specification](docs/api/API_SPECIFICATION.md) for detailed endpoint documentation.
 
+## Authentication
+
+The MES ION API uses a two-layer authentication system. For complete details, see:
+- [ION Authentication Guide](docs/ION_AUTHENTICATION_GUIDE.md) - Comprehensive authentication documentation
+- [Infor ION Reference](docs/INFOR_ION_REFERENCE.md) - ION-specific API information
+
 ## Contributing
 
 1. Fork the repository

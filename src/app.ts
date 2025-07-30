@@ -11,6 +11,7 @@ import { rateLimiter } from './middleware/rate-limiter.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { healthRouter } from './routes/health.js';
 import { apiRouter } from './routes/api.js';
+import { metricsRouter } from './routes/metrics.js';
 
 export const createApp = (): Express => {
   const app = express();
@@ -43,6 +44,9 @@ export const createApp = (): Express => {
 
   // Health check routes (no auth required)
   app.use('/', healthRouter);
+
+  // Metrics endpoint (no auth required for Prometheus scraping)
+  app.use('/', metricsRouter);
 
   // API documentation (no auth required)
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -4,6 +4,14 @@ import { config } from '../config/index';
 import { cache } from '../cache/index';
 import logger from '../utils/logger';
 import { IONAPIError } from '../utils/errors';
+import { 
+  recordAuthTokenRequest, 
+  recordTokenCacheHit, 
+  recordTokenCacheMiss,
+  updateTokenExpiry,
+  authMetrics
+} from '../utils/metrics';
+import { AuthErrors, parseOAuthError } from '../utils/auth-errors';
 
 export class IONAuthManager {
   private readonly cacheKey = 'ion:oauth:token';
@@ -15,6 +23,13 @@ export class IONAuthManager {
     this.tokenEndpoint = config.ion.tokenEndpoint;
     this.clientId = config.ion.clientId;
     this.clientSecret = config.ion.clientSecret;
+    
+    // Validate configuration
+    if (!this.tokenEndpoint || !this.clientId || !this.clientSecret) {
+      throw AuthErrors.configurationError(
+        'Missing required ION configuration (tokenEndpoint, clientId, or clientSecret)'
+      );
+    }
   }
 
   async getAccessToken(): Promise<string> {
@@ -23,15 +38,26 @@ export class IONAuthManager {
     
     if (cachedToken && cachedToken.expiresAt > Date.now()) {
       logger.debug('Using cached ION access token');
+      recordTokenCacheHit();
+      
+      // Update token expiry metric
+      const timeUntilExpiry = (cachedToken.expiresAt - Date.now()) / 1000;
+      updateTokenExpiry(timeUntilExpiry);
+      
       return cachedToken.token;
     }
 
+    // Cache miss
+    recordTokenCacheMiss();
+    
     // Request new token
     logger.info('Requesting new ION access token');
     return this.requestNewToken();
   }
 
   private async requestNewToken(): Promise<string> {
+    const startTime = Date.now();
+    
     try {
       const response = await axios.post<IONTokenResponse | IONApiError>(
         this.tokenEndpoint,
@@ -50,14 +76,7 @@ export class IONAuthManager {
 
       if ('error' in response.data) {
         const error = response.data as IONApiError;
-        throw new IONAPIError(
-          `OAuth token request failed: ${error.error}`,
-          401,
-          {
-            description: error.error_description,
-            uri: error.error_uri,
-          },
-        );
+        throw parseOAuthError(error);
       }
 
       const tokenData = response.data as IONTokenResponse;
@@ -81,8 +100,18 @@ export class IONAuthManager {
         scope: tokenData.scope,
       });
 
+      // Record metrics
+      const duration = (Date.now() - startTime) / 1000;
+      recordAuthTokenRequest(true, duration);
+      updateTokenExpiry(tokenData.expires_in - 60);
+      authMetrics.activeTokens.set(1);
+
       return tokenData.access_token;
     } catch (error) {
+      // Record failed metric
+      const duration = (Date.now() - startTime) / 1000;
+      recordAuthTokenRequest(false, duration);
+      
       if (axios.isAxiosError(error)) {
         logger.error('ION OAuth request failed', {
           status: error.response?.status,
@@ -90,19 +119,30 @@ export class IONAuthManager {
           message: error.message,
         });
         
-        throw new IONAPIError(
-          'Failed to obtain ION access token',
-          error.response?.status || 500,
-          error.response?.data,
-        );
+        // Handle specific error cases
+        if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+          throw AuthErrors.networkError(error.message, {
+            code: error.code,
+            endpoint: this.tokenEndpoint,
+          });
+        }
+        
+        if (error.response) {
+          throw parseOAuthError(error.response);
+        }
+        
+        throw AuthErrors.networkError(error.message);
       }
       
-      throw error;
+      throw AuthErrors.unknownError(
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      );
     }
   }
 
   async clearToken(): Promise<void> {
     await cache.delete(this.cacheKey);
     logger.info('ION access token cleared from cache');
+    authMetrics.activeTokens.set(0);
   }
 }

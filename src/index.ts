@@ -2,11 +2,19 @@ import { createApp } from './app.js';
 import { config } from './config/index.js';
 import logger from './utils/logger.js';
 import { cache } from './cache/index.js';
+import { IONAuthManager, initializeTokenRefresher, stopTokenRefresher } from './integrations/ion/index.js';
 
 const startServer = async (): Promise<void> => {
   try {
     // Initialize cache
     await cache.initialize();
+    
+    // Initialize ION token refresher
+    const authManager = new IONAuthManager();
+    initializeTokenRefresher(authManager, {
+      refreshBeforeExpiry: 300, // Refresh 5 minutes before expiry
+      checkInterval: 60000, // Check every minute
+    });
     
     const app = createApp();
 
@@ -25,6 +33,9 @@ const startServer = async (): Promise<void> => {
       server.close(async () => {
         try {
           // Cleanup resources
+          stopTokenRefresher();
+          logger.info('Token refresher stopped');
+          
           await cache.disconnect();
           logger.info('Cache disconnected');
           
