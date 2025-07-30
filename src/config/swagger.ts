@@ -1,6 +1,9 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import { config } from './index';
 
+// Determine protocol based on environment
+const protocol = config.isProduction ? 'https' : 'http';
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -15,13 +18,13 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
+        url: `${protocol}://${config.apiHostname}${config.apiPrefix}`,
+        description: 'Current server',
+      },
+      ...(config.isDevelopment ? [{
         url: `http://localhost:${config.port}${config.apiPrefix}`,
-        description: 'Development server',
-      },
-      {
-        url: `https://api.mes.company.com${config.apiPrefix}`,
-        description: 'Production server',
-      },
+        description: 'Direct local server',
+      }] : []),
     ],
     components: {
       securitySchemes: {

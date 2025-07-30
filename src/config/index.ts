@@ -43,7 +43,8 @@ const envSchema = Joi.object({
 
   // Request Configuration
   REQUEST_TIMEOUT_MS: Joi.number().default(30000), // 30 seconds
-  API_PREFIX: Joi.string().default('/api/v1'),
+  API_PREFIX: Joi.string().allow('').default(''),
+  API_HOSTNAME: Joi.string().default('localhost'),
 
   // Webhook Configuration
   WEBHOOK_SECRET: Joi.string().optional(),
@@ -105,6 +106,7 @@ export const config = {
   // Request
   requestTimeoutMs: envVars.REQUEST_TIMEOUT_MS as number,
   apiPrefix: envVars.API_PREFIX as string,
+  apiHostname: envVars.API_HOSTNAME as string,
   
   // Webhook
   webhookSecret: envVars.WEBHOOK_SECRET as string | undefined,
