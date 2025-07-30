@@ -1,5 +1,5 @@
 import { CacheDriver, CacheEntry } from '../types';
-import logger from '../utils/logger';
+import logger from '../../utils/logger';
 
 export class MemoryCacheDriver implements CacheDriver {
   private cache: Map<string, CacheEntry<unknown>> = new Map();

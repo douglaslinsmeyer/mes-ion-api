@@ -1,33 +1,37 @@
 import axios from 'axios';
 import { IONTokenResponse, IONApiError } from './types';
-import { config } from '../config/index';
-import { cache } from '../cache/index';
-import logger from '../utils/logger';
-import { IONAPIError } from '../utils/errors';
+import { config } from '../../config/index';
+import { cache } from '../../cache/index';
+import logger from '../../utils/logger';
+import { IONAPIError } from '../../utils/errors';
 import { 
   recordAuthTokenRequest, 
   recordTokenCacheHit, 
   recordTokenCacheMiss,
   updateTokenExpiry,
   authMetrics
-} from '../utils/metrics';
-import { AuthErrors, parseOAuthError } from '../utils/auth-errors';
+} from '../../utils/metrics';
+import { AuthErrors, parseOAuthError } from '../../utils/auth-errors';
 
 export class IONAuthManager {
   private readonly cacheKey = 'ion:oauth:token';
   private readonly tokenEndpoint: string;
   private readonly clientId: string;
   private readonly clientSecret: string;
+  private readonly username: string;
+  private readonly password: string;
 
   constructor() {
     this.tokenEndpoint = config.ion.tokenEndpoint;
     this.clientId = config.ion.clientId;
     this.clientSecret = config.ion.clientSecret;
+    this.username = config.ion.username;
+    this.password = config.ion.password;
     
     // Validate configuration
-    if (!this.tokenEndpoint || !this.clientId || !this.clientSecret) {
+    if (!this.tokenEndpoint || !this.clientId || !this.clientSecret || !this.username || !this.password) {
       throw AuthErrors.configurationError(
-        'Missing required ION configuration (tokenEndpoint, clientId, or clientSecret)'
+        'Missing required ION configuration (tokenEndpoint, clientId, clientSecret, username, or password)'
       );
     }
   }
@@ -62,9 +66,11 @@ export class IONAuthManager {
       const response = await axios.post<IONTokenResponse | IONApiError>(
         this.tokenEndpoint,
         new URLSearchParams({
-          grant_type: 'client_credentials',
+          grant_type: 'password',
           client_id: this.clientId,
           client_secret: this.clientSecret,
+          username: this.username,
+          password: this.password,
         }),
         {
           headers: {
@@ -144,5 +150,13 @@ export class IONAuthManager {
     await cache.delete(this.cacheKey);
     logger.info('ION access token cleared from cache');
     authMetrics.activeTokens.set(0);
+  }
+  
+  async getTokenExpiry(): Promise<string | null> {
+    const cachedToken = await cache.get<{ token: string; expiresAt: number }>(this.cacheKey);
+    if (cachedToken && cachedToken.expiresAt > Date.now()) {
+      return new Date(cachedToken.expiresAt).toISOString();
+    }
+    return null;
   }
 }

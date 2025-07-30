@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { config } from './config/index';
-import logger from './utils/logger';
+import { config } from '../config/index';
+import logger from '../utils/logger';
 import crypto from 'crypto';
 
 export const webhookRouter = Router();

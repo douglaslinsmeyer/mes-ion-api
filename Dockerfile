@@ -9,6 +9,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# Copy source code
+COPY . .
+
 # Expose port for the API
 EXPOSE 3000
 

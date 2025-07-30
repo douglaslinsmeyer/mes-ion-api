@@ -1,7 +1,11 @@
 import dotenv from 'dotenv';
 import Joi from 'joi';
+import { loadIONCredentials } from '../utils/ionapi-parser.js';
 
 dotenv.config();
+
+// Load ION credentials from JSON if available
+const ionCredentials = loadIONCredentials();
 
 const envSchema = Joi.object({
   // Server Configuration
@@ -18,11 +22,14 @@ const envSchema = Joi.object({
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(1000),
 
   // ION API Configuration
-  ION_TENANT_ID: Joi.string().required(),
-  ION_CLIENT_ID: Joi.string().required(),
-  ION_CLIENT_SECRET: Joi.string().required(),
-  ION_TOKEN_ENDPOINT: Joi.string().uri().required(),
-  ION_API_ENDPOINT: Joi.string().uri().required(),
+  ION_API_JSON: Joi.string().optional(),
+  ION_TENANT_ID: Joi.string().optional(),
+  ION_CLIENT_ID: Joi.string().optional(),
+  ION_CLIENT_SECRET: Joi.string().optional(),
+  ION_USERNAME: Joi.string().optional(),
+  ION_PASSWORD: Joi.string().optional(),
+  ION_TOKEN_ENDPOINT: Joi.string().uri().optional(),
+  ION_API_ENDPOINT: Joi.string().uri().optional(),
   ION_SUBSCRIPTION_KEY: Joi.string().optional(),
   ION_ORGANIZATION: Joi.string().optional(),
 
@@ -69,15 +76,18 @@ export const config = {
   rateLimitWindowMs: envVars.RATE_LIMIT_WINDOW_MS as number,
   rateLimitMaxRequests: envVars.RATE_LIMIT_MAX_REQUESTS as number,
   
-  // ION API
+  // ION API - merge JSON credentials with env vars (env vars take precedence)
   ion: {
-    tenantId: envVars.ION_TENANT_ID as string,
-    clientId: envVars.ION_CLIENT_ID as string,
-    clientSecret: envVars.ION_CLIENT_SECRET as string,
-    tokenEndpoint: envVars.ION_TOKEN_ENDPOINT as string,
-    apiEndpoint: envVars.ION_API_ENDPOINT as string,
+    tenantId: (envVars.ION_TENANT_ID || ionCredentials.tenantId) as string,
+    clientId: (envVars.ION_CLIENT_ID || ionCredentials.clientId) as string,
+    clientSecret: (envVars.ION_CLIENT_SECRET || ionCredentials.clientSecret) as string,
+    username: (envVars.ION_USERNAME || ionCredentials.username) as string,
+    password: (envVars.ION_PASSWORD || ionCredentials.password) as string,
+    tokenEndpoint: (envVars.ION_TOKEN_ENDPOINT || ionCredentials.tokenEndpoint) as string,
+    apiEndpoint: (envVars.ION_API_ENDPOINT || ionCredentials.apiEndpoint) as string,
     subscriptionKey: envVars.ION_SUBSCRIPTION_KEY as string | undefined,
     organization: envVars.ION_ORGANIZATION as string | undefined,
+    scopes: ionCredentials.scopes || [],
   },
   
   // Cache

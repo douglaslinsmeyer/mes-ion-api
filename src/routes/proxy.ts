@@ -1,8 +1,8 @@
 import { Router, Response } from 'express';
-import { AuthenticatedRequest } from './middleware/auth';
-import { ionClient, IONRequestOptions } from './integrations/ion';
-import logger from './utils/logger';
-import { cache } from './cache/index';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { ionClient, IONRequestOptions } from '../integrations/ion';
+import logger from '../utils/logger';
+import { cache } from '../cache/index';
 
 export const proxyRouter = Router();
 
@@ -79,7 +79,7 @@ const shouldCache = (path: string, method: string): { cache: boolean; ttl?: numb
  *               $ref: '#/components/schemas/Error'
  */
 // Main proxy handler
-proxyRouter.all('/*', async (req: AuthenticatedRequest, res: Response) => {
+proxyRouter.all('/*path', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const ionPath = req.path; // Path after /proxy
     const method = req.method as IONRequestOptions['method'];

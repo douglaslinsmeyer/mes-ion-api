@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware } from './middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { proxyRouter } from './proxy';
 import { webhookRouter } from './webhook';
 

@@ -65,26 +65,57 @@ X-API-Key: msk_your_api_key_here
 
 ### OAuth 2.0 Authentication
 
-The MES ION API authenticates to ION using OAuth 2.0 client credentials:
+The MES ION API authenticates to ION using OAuth 2.0 Resource Owner Password Credentials grant:
 
 ```http
 POST https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=client_credentials&
+grant_type=password&
 client_id=TENANT~ClientId&
-client_secret=ClientSecret
+client_secret=ClientSecret&
+username=YourUsername&
+password=YourPassword
 ```
 
 ## Configuration
 
-### Required Environment Variables
+### Using .ionapi File (Recommended)
+
+The easiest way to configure ION credentials is using the `.ionapi` file downloaded from Infor ION:
+
+1. **Download the .ionapi file** from Infor ION API configuration
+2. **Place it in one of these locations**:
+   - Set `ION_API_FILE=/path/to/your/.ionapi` environment variable
+   - `./config/.ionapi` in your project directory
+   - `./.ionapi` in your project root
+   - `~/.ionapi` in your home directory
+
+The `.ionapi` file contains:
+```json
+{
+  "ti": "TENANT_ID",
+  "ci": "CLIENT_ID",
+  "cs": "CLIENT_SECRET",
+  "saak": "SERVICE_ACCOUNT_ACCESS_KEY",  // Used as username
+  "sask": "SERVICE_ACCOUNT_SECRET_KEY",  // Used as password
+  "pu": "https://mingle-sso.inforcloudsuite.com:443/TENANT/as/",
+  "ot": "token.oauth2",
+  "iu": "https://mingle-ionapi.inforcloudsuite.com"
+}
+```
+
+### Using Environment Variables
+
+Alternatively, you can set credentials via environment variables:
 
 ```env
 # ION OAuth Configuration
 ION_TENANT_ID=your-tenant-id
 ION_CLIENT_ID=your-client-id
 ION_CLIENT_SECRET=your-client-secret
+ION_USERNAME=your-ion-username          # Or use saak from .ionapi
+ION_PASSWORD=your-ion-password          # Or use sask from .ionapi
 ION_TOKEN_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2
 ION_API_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT
 
@@ -95,6 +126,8 @@ ION_ORGANIZATION=your-organization          # For multi-org tenants
 # Security Configuration
 API_KEY_SALT=your-random-salt-here         # For hashing API keys
 ```
+
+**Note**: Environment variables take precedence over .ionapi file values.
 
 ### Token Refresher Configuration
 
@@ -284,9 +317,11 @@ enum IONAuthErrorCode {
 # Test OAuth credentials
 curl -X POST "https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
+  -d "grant_type=password" \
   -d "client_id=$ION_CLIENT_ID" \
-  -d "client_secret=$ION_CLIENT_SECRET"
+  -d "client_secret=$ION_CLIENT_SECRET" \
+  -d "username=$ION_USERNAME" \
+  -d "password=$ION_PASSWORD"
 ```
 
 #### 2. Token Expiry Issues

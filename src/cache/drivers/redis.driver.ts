@@ -1,8 +1,8 @@
 import Redis from 'ioredis';
 import { CacheDriver } from '../types';
-import { config } from '../config/index';
-import logger from '../utils/logger';
-import { CacheError } from '../utils/errors';
+import { config } from '../../config/index';
+import logger from '../../utils/logger';
+import { CacheError } from '../../utils/errors';
 
 export class RedisCacheDriver implements CacheDriver {
   private client: Redis | null = null;

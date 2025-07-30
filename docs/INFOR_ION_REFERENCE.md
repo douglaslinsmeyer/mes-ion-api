@@ -18,7 +18,7 @@ This document provides essential information about Infor ION APIs that the MES I
 
 ### OAuth 2.0 Configuration
 
-Infor ION uses OAuth 2.0 with the client credentials grant type.
+Infor ION uses OAuth 2.0 with the Resource Owner Password Credentials grant type.
 
 #### Token Endpoint
 ```
@@ -26,18 +26,22 @@ https://mingle-ionapi.inforcloudsuite.com/{tenant}/as/token.oauth2
 ```
 
 #### Required Parameters
-- `grant_type`: "client_credentials"
+- `grant_type`: "password"
 - `client_id`: Your ION client ID
 - `client_secret`: Your ION client secret
-- `scope`: Space-separated list of scopes
+- `username`: Your ION username
+- `password`: Your ION password
+- `scope`: Space-separated list of scopes (optional)
 
 #### Example Token Request
 ```bash
 curl -X POST "https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
+  -d "grant_type=password" \
   -d "client_id=TENANT~AbC123..." \
   -d "client_secret=xYz789..." \
+  -d "username=your-username" \
+  -d "password=your-password" \
   -d "scope=https://mingle-ionapi.inforcloudsuite.com/TENANT"
 ```
 

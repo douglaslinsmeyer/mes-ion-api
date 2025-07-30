@@ -76,7 +76,19 @@ docker-compose logs -f api
 
 ## Configuration
 
-### Environment Variables
+The MES ION API supports two methods for providing ION credentials:
+
+### Method 1: Using ION_API_JSON Environment Variable (Recommended)
+
+Set the entire .ionapi file content as a JSON string in the `ION_API_JSON` environment variable:
+
+```bash
+export ION_API_JSON='{"ti":"TENANT_ID","ci":"CLIENT_ID","cs":"CLIENT_SECRET","saak":"USERNAME","sask":"PASSWORD","pu":"https://mingle-sso.inforcloudsuite.com:443/TENANT/as/","ot":"token.oauth2","iu":"https://mingle-ionapi.inforcloudsuite.com","sc":["Infor-ION"]}'
+```
+
+This automatically extracts all required credentials from the JSON.
+
+### Method 2: Individual Environment Variables
 
 ```env
 # Server Configuration
@@ -90,10 +102,12 @@ DATABASE_URL=postgresql://user:password@localhost:5432/mes_ion_api
 # Redis Configuration
 REDIS_URL=redis://localhost:6379
 
-# ION API Configuration
+# ION API Configuration (if not using .ionapi file)
 ION_TENANT_ID=your-tenant-id
 ION_CLIENT_ID=your-client-id
 ION_CLIENT_SECRET=your-client-secret
+ION_USERNAME=your-ion-username
+ION_PASSWORD=your-ion-password
 ION_TOKEN_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2
 ION_API_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/api
 
@@ -101,6 +115,8 @@ ION_API_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/api
 API_KEY_SALT=your-random-salt
 WEBHOOK_SECRET=your-webhook-secret
 ```
+
+Note: Individual environment variables take precedence over values from ION_API_JSON.
 
 ## API Documentation
 

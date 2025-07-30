@@ -91,6 +91,11 @@ class CacheManager {
   key(...parts: string[]): string {
     return parts.join(':');
   }
+
+  // Get the current cache driver type
+  getDriver(): string {
+    return config.cache.driver;
+  }
 }
 
 // Export singleton instance

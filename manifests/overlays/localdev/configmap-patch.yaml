@@ -7,18 +7,3 @@
 - op: replace
   path: /data/PRETTY_LOGS
   value: "true"
-- op: add
-  path: /data/ION_TENANT_ID
-  value: "dev-tenant"
-- op: add
-  path: /data/ION_CLIENT_ID
-  value: "dev-client-id"
-- op: add
-  path: /data/ION_CLIENT_SECRET
-  value: "dev-client-secret"
-- op: add
-  path: /data/ION_TOKEN_ENDPOINT
-  value: "https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2"
-- op: add
-  path: /data/ION_API_ENDPOINT
-  value: "https://mingle-ionapi.inforcloudsuite.com/TENANT"

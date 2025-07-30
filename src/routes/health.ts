@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { config } from './config/index';
-import logger from './utils/logger';
+import { config } from '../config/index.js';
+import logger from '../utils/logger.js';
+import { healthCheckService } from '../services/health-check.service.js';
 
 export const healthRouter = Router();
 
@@ -18,6 +19,7 @@ interface HealthStatus {
     ionApi?: {
       status: 'connected' | 'disconnected' | 'unknown';
       lastCheck?: string;
+      tokenExpiry?: string;
     };
   };
 }
@@ -38,16 +40,42 @@ interface HealthStatus {
  *             schema:
  *               $ref: '#/components/schemas/HealthStatus'
  */
-healthRouter.get('/health', (_req: Request, res: Response) => {
-  const health: HealthStatus = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: config.nodeEnv,
-    uptime: process.uptime(),
-  };
+healthRouter.get('/health', async (_req: Request, res: Response) => {
+  try {
+    const services = await healthCheckService.checkAll();
+    
+    // Determine overall health status
+    const isHealthy = services.cache.status !== 'error' && 
+                     services.ionApi.status !== 'error';
+    
+    const health: HealthStatus = {
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: config.nodeEnv,
+      uptime: process.uptime(),
+      services: {
+        cache: {
+          status: services.cache.status === 'connected' ? 'connected' : 'disconnected',
+          driver: services.cache.driver || config.cache.driver,
+        },
+        ionApi: {
+          status: services.ionApi.status === 'connected' ? 'connected' : 'disconnected',
+          lastCheck: services.ionApi.lastCheck,
+          tokenExpiry: services.ionApi.tokenExpiry,
+        },
+      },
+    };
 
-  res.status(200).json(health);
+    res.status(isHealthy ? 200 : 503).json(health);
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed',
+    });
+  }
 });
 
 /**
@@ -84,26 +112,32 @@ healthRouter.get('/health', (_req: Request, res: Response) => {
  */
 healthRouter.get('/ready', async (_req: Request, res: Response) => {
   try {
-    // TODO: Add readiness checks (cache, ION API connectivity)
+    const services = await healthCheckService.checkAll();
+    
+    // Service is ready if cache is connected and ION is at least configured
+    const isReady = services.cache.status === 'connected' && 
+                   services.ionApi.status !== 'error';
+    
     const ready: HealthStatus = {
-      status: 'healthy',
+      status: isReady ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       environment: config.nodeEnv,
       uptime: process.uptime(),
       services: {
         cache: {
-          status: 'connected',
-          driver: config.cache.driver,
+          status: services.cache.status === 'connected' ? 'connected' : 'disconnected',
+          driver: services.cache.driver || config.cache.driver,
         },
         ionApi: {
-          status: 'unknown',
-          lastCheck: new Date().toISOString(),
+          status: services.ionApi.status === 'connected' ? 'connected' : 
+                  services.ionApi.status === 'error' ? 'disconnected' : 'disconnected',
+          lastCheck: services.ionApi.lastCheck,
         },
       },
     };
 
-    res.status(200).json(ready);
+    res.status(isReady ? 200 : 503).json(ready);
   } catch (error) {
     logger.error('Readiness check failed:', error);
     res.status(503).json({

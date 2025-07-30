@@ -1,11 +1,11 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { IONRequestOptions, IONApiResponse } from './types';
 import { IONAuthManager } from './auth';
-import { config } from '../config/index';
-import logger from '../utils/logger';
-import { IONAPIError } from '../utils/errors';
-import { recordApiRequest, recordTokenRefresh } from '../utils/metrics';
-import { isIONAuthError, AuthErrors } from '../utils/auth-errors';
+import { config } from '../../config/index';
+import logger from '../../utils/logger';
+import { IONAPIError } from '../../utils/errors';
+import { recordApiRequest, recordTokenRefresh } from '../../utils/metrics';
+import { isIONAuthError, AuthErrors } from '../../utils/auth-errors';
 
 export class IONApiClient {
   private readonly authManager: IONAuthManager;

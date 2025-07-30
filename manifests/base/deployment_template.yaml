@@ -4,6 +4,7 @@ metadata:
   name: mes-ion-api
   labels:
     app: mes-ion-api
+    restartForPostgresDB: secrets
     app.kubernetes.io/name: mes-ion-api
     app.kubernetes.io/part-of: mes-ion
     app.kubernetes.io/component: api

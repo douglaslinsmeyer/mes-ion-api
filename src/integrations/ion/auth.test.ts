@@ -12,6 +12,8 @@ jest.mock('../../config/index', () => ({
       tokenEndpoint: 'https://test.ion.com/token',
       clientId: 'test-client-id',
       clientSecret: 'test-client-secret',
+      username: 'test-username',
+      password: 'test-password',
     },
     requestTimeoutMs: 30000,
   },
@@ -68,6 +70,15 @@ describe('IONAuthManager', () => {
           timeout: 30000,
         })
       );
+      
+      // Verify the correct grant type and credentials are sent
+      const postCall = mockAxios.post.mock.calls[0];
+      const params = postCall[1] as URLSearchParams;
+      expect(params.get('grant_type')).toBe('password');
+      expect(params.get('client_id')).toBe('test-client-id');
+      expect(params.get('client_secret')).toBe('test-client-secret');
+      expect(params.get('username')).toBe('test-username');
+      expect(params.get('password')).toBe('test-password');
     });
 
     it('should request new token if cached token is expired', async () => {

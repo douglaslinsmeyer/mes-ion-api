@@ -1,6 +1,6 @@
 - op: replace
   path: /spec/template/spec/containers/0/command
-  value: ["node", "src/simple-api.js"]
+  value: ["npm", "run", "dev"]
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
