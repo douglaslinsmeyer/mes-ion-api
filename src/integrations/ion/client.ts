@@ -9,16 +9,16 @@ import { isIONAuthError, AuthErrors } from '../../utils/auth-errors';
 
 export class IONApiClient {
   private readonly authManager: IONAuthManager;
-  private readonly apiEndpoint: string;
+  private readonly authEndpoint: string;
   private axiosInstance: AxiosInstance;
 
   constructor() {
     this.authManager = new IONAuthManager();
-    this.apiEndpoint = config.ion.apiEndpoint;
+    this.authEndpoint = config.ion.authBaseUrl;
     
-    // Create axios instance with default config
+    // Create axios instance with default config for authentication
     this.axiosInstance = axios.create({
-      baseURL: this.apiEndpoint,
+      baseURL: this.authEndpoint,
       timeout: config.requestTimeoutMs,
       headers: {
         'Accept': 'application/json',
@@ -33,6 +33,7 @@ export class IONApiClient {
           method: config.method,
           url: config.url,
           params: config.params,
+          headers: config.headers,
         });
         return config;
       },
@@ -93,6 +94,9 @@ export class IONApiClient {
         'Authorization': `Bearer ${accessToken}`,
       };
 
+      // Log the raw token for debugging
+      logger.debug('Raw access token:', { token: accessToken });
+
       // Add optional headers
       if (config.ion.subscriptionKey) {
         headers['Ocp-Apim-Subscription-Key'] = config.ion.subscriptionKey;
@@ -101,15 +105,22 @@ export class IONApiClient {
         headers['X-Infor-Organization'] = config.ion.organization;
       }
 
-      // Make request
-      const response = await this.axiosInstance.request<T>({
+      // Make request - use custom baseURL if provided, otherwise use default
+      const requestConfig: any = {
         method,
         url: path,
         headers,
         params: options.queryParams,
         data: options.body,
         timeout: options.timeout,
-      });
+      };
+
+      // Override baseURL if provided in options
+      if (options.baseUrl) {
+        requestConfig.baseURL = options.baseUrl;
+      }
+
+      const response = await this.axiosInstance.request<T>(requestConfig);
 
       // Record metrics
       const duration = (Date.now() - startTime) / 1000;
