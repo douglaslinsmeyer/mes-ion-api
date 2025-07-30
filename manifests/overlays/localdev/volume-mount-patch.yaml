@@ -1,0 +1,18 @@
+- op: add
+  path: /spec/template/spec/volumes
+  value:
+    - name: source-code
+      hostPath:
+        path: /Users/douglasl/Projects/mes-environment/mes-ion-api
+        type: Directory
+    - name: node-modules
+      emptyDir: {}
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts
+  value:
+    - name: source-code
+      mountPath: /app
+      readOnly: false
+    - name: node-modules
+      mountPath: /app/node_modules
+      readOnly: false

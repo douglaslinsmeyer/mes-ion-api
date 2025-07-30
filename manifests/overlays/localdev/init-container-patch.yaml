@@ -1,0 +1,14 @@
+- op: add
+  path: /spec/template/spec/initContainers
+  value:
+    - name: npm-install
+      image: node:20-alpine
+      command: ["npm", "ci"]
+      workingDir: /app
+      volumeMounts:
+        - name: source-code
+          mountPath: /app
+          readOnly: false
+        - name: node-modules
+          mountPath: /app/node_modules
+          readOnly: false

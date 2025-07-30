@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mes-ion-api-config
+  labels:
+    app: mes-ion-api
+    app.kubernetes.io/name: mes-ion-api
+    app.kubernetes.io/part-of: mes-ion
+    app.kubernetes.io/component: api
+data:
+  # Server Configuration
+  PORT: "3000"
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  
+  # CORS Configuration
+  CORS_ORIGINS: "http://workflow.mes.localhost,http://localhost:5173,http://localhost:3001"
+  
+  # Security
+  API_KEY_SALT: "mes-ion-api-salt-change-in-prod"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "1000"
+  
+  # Cache Configuration
+  CACHE_DRIVER: "memory"
+  CACHE_TTL_SECONDS: "300"
+  
+  # Request Configuration
+  REQUEST_TIMEOUT_MS: "30000"
+  API_PREFIX: "/api/v1"
+  
+  # Monitoring
+  HEALTH_CHECK_INTERVAL: "30000"
+  
+  # Development Configuration
+  DEBUG: "mes-ion-api:*"
+  PRETTY_LOGS: "false"

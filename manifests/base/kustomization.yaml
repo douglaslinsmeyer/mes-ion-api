@@ -1,0 +1,5 @@
+resources:
+- deployment_template.yaml
+- service.yaml
+- routes_template.yaml
+- configmap.yaml

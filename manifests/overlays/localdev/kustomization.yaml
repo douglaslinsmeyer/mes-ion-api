@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      group: apps
+      version: v1
+      name: mes-ion-api
+    path: replicas-patch.yaml
+  - target:
+      kind: Deployment
+      group: apps
+      version: v1
+      name: mes-ion-api
+    path: tagname-patch.yaml
+  - target:
+      kind: Deployment
+      group: apps
+      version: v1
+      name: mes-ion-api
+    path: volume-mount-patch.yaml
+  - target:
+      kind: Deployment
+      group: apps
+      version: v1
+      name: mes-ion-api
+    path: dev-command-patch.yaml
+  - target:
+      kind: Deployment
+      group: apps
+      version: v1
+      name: mes-ion-api
+    path: init-container-patch.yaml
+  - target:
+      kind: Ingress
+      group: networking.k8s.io
+      version: v1
+      name: mes-ion-api
+    path: routehostname-patch.yaml
+  - target:
+      kind: ConfigMap
+      version: v1
+      name: mes-ion-api-config
+    path: configmap-patch.yaml

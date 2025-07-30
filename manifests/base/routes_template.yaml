@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mes-ion-api
+  labels:
+    app: mes-ion-api
+    app.kubernetes.io/name: mes-ion-api-ingress
+    app.kubernetes.io/part-of: mes-ion
+    app.kubernetes.io/component: ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  ingressClassName: mes-api-gateway
+  rules:
+  - host: ${ROUTE_HOSTNAME}
+    http:
+      paths:
+      - path: /(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: mes-ion-api
+            port:
+              number: 80
