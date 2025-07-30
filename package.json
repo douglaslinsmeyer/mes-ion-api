@@ -86,7 +86,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/company/mes-ion-api.git"
+    "url": "git+https://github.com/douglaslinsmeyer/mes-ion-api.git"
   },
   "keywords": [
     "mes",
@@ -100,9 +100,9 @@
   "author": "MES Team",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/company/mes-ion-api/issues"
+    "url": "https://github.com/douglaslinsmeyer/mes-ion-api/issues"
   },
-  "homepage": "https://github.com/company/mes-ion-api#readme",
+  "homepage": "https://github.com/douglaslinsmeyer/mes-ion-api#readme",
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"

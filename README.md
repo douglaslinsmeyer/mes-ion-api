@@ -37,7 +37,7 @@ MES Applications → MES ION API → Infor ION APIs
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/company/mes-ion-api.git
+git clone https://github.com/douglaslinsmeyer/mes-ion-api.git
 cd mes-ion-api
 ```
 
@@ -288,8 +288,7 @@ This project is proprietary and confidential.
 ## Support
 
 - Documentation: [docs/](docs/)
-- Issues: [GitHub Issues](https://github.com/company/mes-ion-api/issues)
-- Slack: #mes-ion-api
+- Issues: [GitHub Issues](https://github.com/douglaslinsmeyer/mes-ion-api/issues)
 - Email: mes-team@company.com
 
 ## Roadmap
