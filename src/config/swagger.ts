@@ -27,14 +27,6 @@ const options: swaggerJsdoc.Options = {
       }] : []),
     ],
     components: {
-      securitySchemes: {
-        ApiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'X-API-Key',
-          description: 'API key for authentication. Use "dev-api-key-mes-workflow" for development.',
-        },
-      },
       schemas: {
         Error: {
           type: 'object',
@@ -113,11 +105,6 @@ const options: swaggerJsdoc.Options = {
         },
       },
     },
-    security: [
-      {
-        ApiKeyAuth: [],
-      },
-    ],
   },
   apis: ['./src/routes/**/*.ts'],
 };

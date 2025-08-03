@@ -16,8 +16,7 @@ data:
   # CORS Configuration
   CORS_ORIGINS: "http://workflow.mes.localhost,http://localhost:5173,http://localhost:3001"
   
-  # Security
-  API_KEY_SALT: "mes-ion-api-salt-change-in-prod"
+  # Rate Limiting
   RATE_LIMIT_WINDOW_MS: "900000"
   RATE_LIMIT_MAX_REQUESTS: "1000"
   

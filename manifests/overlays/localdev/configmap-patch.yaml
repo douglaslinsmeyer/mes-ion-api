@@ -7,3 +7,12 @@
 - op: replace
   path: /data/PRETTY_LOGS
   value: "true"
+- op: replace
+  path: /data/API_PREFIX
+  value: ""
+- op: add
+  path: /data/API_HOSTNAME
+  value: "localhost"
+- op: replace
+  path: /data/CORS_ORIGINS
+  value: "http://localhost:5173,http://localhost:3001,http://localhost"

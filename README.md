@@ -1,39 +1,19 @@
 # MES ION API
 
-A centralized API gateway service for integrating MES applications with Infor ION APIs.
+MES ION API Gateway - Centralized integration layer for Infor ION APIs
 
-## Overview
+## Description
 
-The MES ION API serves as an intermediary layer between Manufacturing Execution System (MES) applications and Infor ION APIs. It handles authentication, request routing, data transformation, and provides a unified interface for all ION interactions.
+The MES ION API serves as an intermediary layer between Manufacturing Execution System (MES) applications and Infor ION APIs. It handles OAuth 2.0 authentication, request routing, data transformation, and provides a unified interface for all ION interactions.
 
-## Features
+## Prerequisites
 
-- 🔐 **Centralized Authentication** - OAuth 2.0 client credentials flow with token caching
-- 🔄 **Data Transformation** - Automatic conversion between MES JSON and ION BOD formats
-- 🚀 **High Performance** - Response caching, connection pooling, and circuit breakers
-- 📊 **Monitoring** - Comprehensive metrics, logging, and health checks
-- 🔌 **Webhook Support** - Real-time event processing from ION
-- 🛡️ **Security** - API key management, request signing, and audit logging
-- 📖 **Dual API** - REST and GraphQL endpoints for flexibility
-
-## Architecture
-
-```
-MES Applications → MES ION API → Infor ION APIs
-                        ↓
-                  PostgreSQL, Redis
-```
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js 20.x or higher
-- PostgreSQL 15.x
-- Redis 7.x
+- Node.js >=20.0.0
+- npm >=10.0.0
 - Docker and Docker Compose (optional)
+- Kubernetes cluster (for deployment)
 
-### Installation
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -46,283 +26,195 @@ cd mes-ion-api
 npm install
 ```
 
-3. Configure environment variables:
+3. Create environment configuration:
 ```bash
 cp .env.example .env
-# Edit .env with your configuration
 ```
 
-4. Run database migrations:
-```bash
-npm run db:migrate
-```
-
-5. Start the development server:
-```bash
-npm run dev
-```
-
-The API will be available at `http://localhost:3000`
-
-### Docker Setup
-
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# View logs
-docker-compose logs -f api
-```
+4. Configure your `.env` file with ION API credentials (see Configuration section)
 
 ## Configuration
 
-The MES ION API supports two methods for providing ION credentials:
+### ION API Credentials
 
-### Method 1: Using ION_API_JSON Environment Variable (Recommended)
+The service supports two methods for providing ION credentials:
 
-Set the entire .ionapi file content as a JSON string in the `ION_API_JSON` environment variable:
-
+#### Method 1: Using ION_API_JSON (Recommended)
+Set the entire .ionapi file content as a JSON string:
 ```bash
 export ION_API_JSON='{"ti":"TENANT_ID","ci":"CLIENT_ID","cs":"CLIENT_SECRET","saak":"USERNAME","sask":"PASSWORD","pu":"https://mingle-sso.inforcloudsuite.com:443/TENANT/as/","ot":"token.oauth2","iu":"https://mingle-ionapi.inforcloudsuite.com","sc":["Infor-ION"]}'
 ```
 
-This automatically extracts all required credentials from the JSON.
-
-### Method 2: Individual Environment Variables
-
+#### Method 2: Individual Environment Variables
 ```env
-# Server Configuration
-NODE_ENV=development
-PORT=3000
-LOG_LEVEL=info
-
-# Database Configuration
-DATABASE_URL=postgresql://user:password@localhost:5432/mes_ion_api
-
-# Redis Configuration
-REDIS_URL=redis://localhost:6379
-
-# ION API Configuration (if not using .ionapi file)
 ION_TENANT_ID=your-tenant-id
 ION_CLIENT_ID=your-client-id
 ION_CLIENT_SECRET=your-client-secret
 ION_USERNAME=your-ion-username
 ION_PASSWORD=your-ion-password
 ION_TOKEN_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/as/token.oauth2
-ION_API_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT/api
-
-# Security
-API_KEY_SALT=your-random-salt
-WEBHOOK_SECRET=your-webhook-secret
+ION_API_ENDPOINT=https://mingle-ionapi.inforcloudsuite.com/TENANT
 ```
 
-Note: Individual environment variables take precedence over values from ION_API_JSON.
+### Other Configuration Options
+```env
+# Server
+PORT=3000
+LOG_LEVEL=info
 
-## API Documentation
+# CORS
+CORS_ORIGINS=http://localhost:5173,http://localhost:3001
 
-### Authentication
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=1000
 
-Include your API key in the request header:
-
-```http
-X-API-Key: your-api-key
+# Cache
+CACHE_DRIVER=memory
+CACHE_TTL_SECONDS=300
 ```
 
-### Example Requests
+## Usage
 
-#### Get Manufacturing Orders
-
+### Development Mode
 ```bash
-curl -X GET "http://localhost:3000/api/v1/manufacturing-orders?facility=FAC001" \
-  -H "X-API-Key: your-api-key"
+npm run dev
 ```
 
-#### Create Manufacturing Order
-
+### Production Build
 ```bash
-curl -X POST "http://localhost:3000/api/v1/manufacturing-orders" \
-  -H "X-API-Key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "facility": "FAC001",
-    "product": "PROD-123",
-    "quantity": 100,
-    "dueDate": "2024-01-25T17:00:00Z"
-  }'
+npm run build
+npm start
 ```
 
-### GraphQL
-
-Access the GraphQL playground at `http://localhost:3000/graphql`
-
-```graphql
-query {
-  manufacturingOrders(facility: "FAC001") {
-    id
-    product {
-      id
-      description
-    }
-    quantity
-    status
-  }
-}
+### Docker Compose (includes PostgreSQL, Redis, RabbitMQ)
+```bash
+docker-compose up -d
 ```
 
-## Development
+## API Endpoints
 
-### Project Structure
+All endpoints are publicly accessible - no authentication required.
+
+### Available Endpoints
+
+#### Health Check
+```bash
+GET /health
+curl http://localhost:3000/health
+```
+
+#### Metrics (Prometheus format)
+```bash
+GET /metrics
+curl http://localhost:3000/metrics
+```
+
+#### API Documentation
+```bash
+GET /api-docs
+# Swagger UI
+```
+
+#### Proxy Endpoint
+```bash
+GET/POST/PUT/DELETE /proxy/*
+# Forwards requests to ION API with automatic OAuth authentication
+curl http://localhost:3000/proxy/m3api-rest/v2/execute/PMS100MI/SearchMO?SQRY=0000002786
+
+# Optional: Include X-Client-ID header for request tracking
+curl -H "X-Client-ID: my-app" http://localhost:3000/proxy/m3api-rest/v2/execute/PMS100MI/SearchMO
+```
+
+## Project Structure
 
 ```
 mes-ion-api/
 ├── src/
-│   ├── config/         # Configuration files
-│   ├── controllers/    # REST API controllers
-│   ├── services/       # Business logic
-│   ├── middleware/     # Express middleware
-│   ├── types/          # TypeScript types
-│   ├── utils/          # Utility functions
-│   └── db/             # Database layer
-├── tests/              # Test files
-├── docs/               # Documentation
-├── scripts/            # Utility scripts
-└── manifests/          # Kubernetes manifests
+│   ├── app.ts              # Express application setup
+│   ├── index.ts            # Server entry point
+│   ├── config/             # Configuration and Swagger setup
+│   ├── integrations/ion/   # ION API integration (auth, client, token management)
+│   ├── routes/             # API route definitions
+│   ├── middleware/         # Express middleware (auth, error handling, rate limiting)
+│   ├── services/           # Business logic layer
+│   ├── cache/              # Caching strategies (memory/Redis)
+│   └── utils/              # Utility functions (logging, metrics, errors)
+├── tests/                  # Test suites
+├── manifests/              # Kubernetes deployment files
+└── scripts/                # Utility scripts
 ```
 
-### Running Tests
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Build TypeScript to dist/ |
+| `npm start` | Run production server |
+| `npm test` | Run all tests |
+| `npm run test:coverage` | Run tests with coverage (80% threshold) |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Fix ESLint issues |
+| `npm run format` | Format code with Prettier |
+| `npm run docker:build` | Build Docker image |
+
+## Testing
+
+The project uses Jest with TypeScript support:
 
 ```bash
 # Run all tests
 npm test
 
-# Run tests in watch mode
+# Watch mode
 npm run test:watch
 
-# Run tests with coverage
+# Coverage report (80% minimum required)
 npm run test:coverage
 
-# Run integration tests
+# Integration tests only
 npm run test:integration
 ```
 
-### Code Style
+Test files are located alongside source files (`*.test.ts`) and in the `tests/` directory.
 
-This project uses ESLint and Prettier for code formatting:
+## Kubernetes Deployment
 
-```bash
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
-```
-
-## Deployment
-
-### Production Build
+Deploy to Kubernetes using Kustomize:
 
 ```bash
-# Build for production
-npm run build
+# Deploy to local development
+kubectl apply -k manifests/overlays/localdev
 
-# Start production server
-npm start
+# Access the service at http://localhost/ion/*
 ```
 
-### Kubernetes Deployment
+The service is configured to run behind an ingress at `/ion` path.
 
-```bash
-# Apply Kubernetes manifests
-kubectl apply -k manifests/overlays/production
+## Development Tools
 
-# Check deployment status
-kubectl get pods -n mes-system
-```
-
-### Health Checks
-
-- Health endpoint: `GET /health`
-- Readiness endpoint: `GET /ready`
-- Metrics endpoint: `GET /metrics`
-
-## Monitoring
-
-### Prometheus Metrics
-
-The API exposes Prometheus metrics at `/metrics`:
-
-- `http_request_duration_seconds` - Request duration histogram
-- `http_requests_total` - Total request counter
-- `ion_api_requests_total` - ION API request counter
-- `cache_hits_total` - Cache hit counter
-- `active_connections` - Active connection gauge
-
-### Logging
-
-Logs are structured JSON format using Winston:
-
-```json
-{
-  "timestamp": "2024-01-20T10:30:00Z",
-  "level": "info",
-  "message": "Manufacturing order created",
-  "requestId": "req-123-456",
-  "orderId": "MO-2024-001",
-  "duration": 145
-}
-```
-
-## API Reference
-
-Full API documentation is available at:
-- REST API: `http://localhost:3000/api-docs`
-- GraphQL: `http://localhost:3000/graphql`
-
-See [API Specification](docs/api/API_SPECIFICATION.md) for detailed endpoint documentation.
-
-## Authentication
-
-The MES ION API uses a two-layer authentication system. For complete details, see:
-- [ION Authentication Guide](docs/ION_AUTHENTICATION_GUIDE.md) - Comprehensive authentication documentation
-- [Infor ION Reference](docs/INFOR_ION_REFERENCE.md) - ION-specific API information
+- **TypeScript 5.3.3** - Type safety and modern JavaScript features
+- **Express 5.0.0-beta.1** - Web framework
+- **Winston** - Structured logging
+- **Prometheus Client** - Metrics collection
+- **Swagger** - API documentation
+- **ESLint & Prettier** - Code quality and formatting
+- **Husky & Commitizen** - Git hooks and conventional commits
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Commit changes using conventional commits (`npm run commit`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Security
-
-- Report security vulnerabilities to security@company.com
-- See [SECURITY.md](SECURITY.md) for security policies
-- Regular dependency updates via Dependabot
-
 ## License
 
-This project is proprietary and confidential.
+This project is proprietary and confidential (UNLICENSED).
 
 ## Support
 
-- Documentation: [docs/](docs/)
 - Issues: [GitHub Issues](https://github.com/douglaslinsmeyer/mes-ion-api/issues)
-- Email: mes-team@company.com
-
-## Roadmap
-
-- [ ] Multi-tenant support
-- [ ] Advanced caching strategies
-- [ ] GraphQL subscriptions
-- [ ] API versioning
-- [ ] Machine learning for anomaly detection
-
-## Acknowledgments
-
-- Built using the architecture patterns from mes-workflow-api
-- Inspired by modern API gateway designs
-- ION API integration patterns from mes-api-workflow
+- Repository: [https://github.com/douglaslinsmeyer/mes-ion-api](https://github.com/douglaslinsmeyer/mes-ion-api)

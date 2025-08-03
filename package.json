@@ -20,6 +20,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:integration": "jest --testPathPattern=integration",
+    "test:proxy": "tsx src/test-proxy.ts",
     "docker:build": "docker build -t mes-ion-api .",
     "docker:run": "docker run -p 3000:3000 mes-ion-api",
     "prepare": "husky install",

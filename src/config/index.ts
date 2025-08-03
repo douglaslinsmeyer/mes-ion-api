@@ -16,8 +16,7 @@ const envSchema = Joi.object({
   // CORS Configuration
   CORS_ORIGINS: Joi.string().required(),
 
-  // Security
-  API_KEY_SALT: Joi.string().required(),
+  // Rate Limiting
   RATE_LIMIT_WINDOW_MS: Joi.number().default(900000), // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(1000),
 
@@ -46,8 +45,6 @@ const envSchema = Joi.object({
   API_PREFIX: Joi.string().allow('').default(''),
   API_HOSTNAME: Joi.string().default('localhost'),
 
-  // Webhook Configuration
-  WEBHOOK_SECRET: Joi.string().optional(),
 
   // Monitoring
   HEALTH_CHECK_INTERVAL: Joi.number().default(30000), // 30 seconds
@@ -72,12 +69,11 @@ export const config = {
   // CORS
   corsOrigins: (envVars.CORS_ORIGINS as string).split(',').map((origin) => origin.trim()),
   
-  // Security
-  apiKeySalt: envVars.API_KEY_SALT as string,
+  // Rate Limiting
   rateLimitWindowMs: envVars.RATE_LIMIT_WINDOW_MS as number,
   rateLimitMaxRequests: envVars.RATE_LIMIT_MAX_REQUESTS as number,
   
-  // ION API - merge JSON credentials with env vars (env vars take precedence)
+  // ION Authentication - merge JSON credentials with env vars (env vars take precedence)
   ion: {
     tenantId: (envVars.ION_TENANT_ID || ionCredentials.tenantId) as string,
     clientId: (envVars.ION_CLIENT_ID || ionCredentials.clientId) as string,
@@ -85,7 +81,7 @@ export const config = {
     username: (envVars.ION_USERNAME || ionCredentials.username) as string,
     password: (envVars.ION_PASSWORD || ionCredentials.password) as string,
     tokenEndpoint: (envVars.ION_TOKEN_ENDPOINT || ionCredentials.tokenEndpoint) as string,
-    apiEndpoint: (envVars.ION_API_ENDPOINT || ionCredentials.apiEndpoint) as string,
+    authBaseUrl: (envVars.ION_API_ENDPOINT || ionCredentials.apiEndpoint) as string,
     subscriptionKey: envVars.ION_SUBSCRIPTION_KEY as string | undefined,
     organization: envVars.ION_ORGANIZATION as string | undefined,
     scopes: ionCredentials.scopes || [],
@@ -108,8 +104,6 @@ export const config = {
   apiPrefix: envVars.API_PREFIX as string,
   apiHostname: envVars.API_HOSTNAME as string,
   
-  // Webhook
-  webhookSecret: envVars.WEBHOOK_SECRET as string | undefined,
   
   // Monitoring
   healthCheckInterval: envVars.HEALTH_CHECK_INTERVAL as number,

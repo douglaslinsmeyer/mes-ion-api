@@ -63,6 +63,21 @@ export function parseIONAPIJson(jsonContent: string): ParsedIONCredentials {
       scopes: ionData.sc 
     });
     
+    // Construct the API endpoint with tenant if not already included
+    let apiEndpoint = ionData.iu;
+    
+    // Check if the URL already includes the tenant
+    const urlObj = new URL(apiEndpoint);
+    const pathParts = urlObj.pathname.split('/').filter(Boolean);
+    
+    // If the base URL doesn't include the tenant in the path, add it
+    if (pathParts.length === 0 || pathParts[0].toLowerCase() !== tenantId.toLowerCase()) {
+      // Ensure no trailing slash on base URL
+      apiEndpoint = apiEndpoint.endsWith('/') ? apiEndpoint.slice(0, -1) : apiEndpoint;
+      // Add tenant to the path
+      apiEndpoint = `${apiEndpoint}/${tenantId}`;
+    }
+    
     return {
       tenantId,
       clientId: ionData.ci,
@@ -70,7 +85,7 @@ export function parseIONAPIJson(jsonContent: string): ParsedIONCredentials {
       username: ionData.saak,
       password: ionData.sask,
       tokenEndpoint,
-      apiEndpoint: ionData.iu,
+      apiEndpoint,
       scopes: ionData.sc || [],
     };
   } catch (error) {

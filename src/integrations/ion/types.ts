@@ -17,6 +17,7 @@ export interface IONRequestOptions {
   body?: unknown;
   queryParams?: Record<string, string | number | boolean>;
   timeout?: number;
+  baseUrl?: string; // Optional override for the base URL
 }
 
 export interface IONApiClientConfig {

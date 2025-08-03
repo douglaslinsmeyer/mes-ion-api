@@ -8,14 +8,15 @@ metadata:
     app.kubernetes.io/part-of: mes-ion
     app.kubernetes.io/component: ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: mes-api-gateway
   rules:
   - host: ${ROUTE_HOSTNAME}
     http:
       paths:
-      - path: /(.*)
+      - path: /ion(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:

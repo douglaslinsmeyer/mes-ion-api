@@ -79,3 +79,6 @@ manifests/overlays/*/*.secret.yaml
 # Local development
 *.local
 .history/
+
+# MES protect directory
+.mes-protect
